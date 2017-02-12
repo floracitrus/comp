@@ -18,9 +18,35 @@ struct node
     int data;
     struct node* next;
 };
+ void recursiveReverse(struct node** head_ref)
+{
+    struct node* first;
+    struct node* rest;
+      
+    /* empty list */
+    if (*head_ref == NULL)
+       return;   
  
+    /* suppose first = {1, 2, 3}, rest = {2, 3} */
+    first = *head_ref;  
+    rest  = first->next;
+ 
+    /* List has only one node */
+    if (rest == NULL)
+       return;   
+ 
+    /* reverse the rest list and put the first element at the end */
+    recursiveReverse(&rest);
+    first->next->next  = first;  
+     
+    /* tricky step -- see the diagram */
+    first->next  = NULL;          
+ 
+    /* fix the head pointer */
+    *head_ref = rest;              
+}
 /* Function to reverse the linked list */
-static void reverse(struct node** head_ref)
+/*static void reverse(struct node** head_ref)
 {
     struct node* prev = NULL;
     struct node* current = *head_ref;
@@ -33,6 +59,7 @@ static void reverse(struct node** head_ref)
     }
     *head_ref = prev;
 }
+*/
  
 /* Function to push a node */
 void push(struct node** head_ref, int new_data)
