@@ -1,0 +1,148 @@
+void treeInsert(Tree tree, Item it){
+    assert(tree!= NULL);
+    int totalNodes = size(tree->root);
+    if(tree->balanceStrategy == NO_REBALANCE){
+        tree->root =  insertRecursive(tree->root,it);
+    }else if(tree->balanceStrategy == REBALANCE_1){
+        tree->root = insertRecursive(tree->root,it);
+        tree->root = balance(tree->root);
+    }else if(tree->balanceStrategy == REBALANCE_100){
+        if(totalNodes >= 100 && (totalNodes%100) == 0){
+            tree->root = insertRecursive(tree->root,it);
+            tree->root = balance(tree->root);
+        }else{
+            tree->root = insertRecursive(tree->root,it);
+        }
+    }else if(tree->balanceStrategy == REBALANCE_1000){
+        if(totalNodes >= 1000 && (totalNodes%1000) == 0){
+            tree->root = insertRecursive(tree->root,it);
+            tree->root = balance(tree->root);
+        }else{
+            tree->root = insertRecursive(tree->root,it);
+        }
+    }else if(tree->balanceStrategy == RANDOMISED){
+        tree->root =  insertRandom(tree->root,it);
+    }else if(tree->balanceStrategy == SPLAY){
+        tree->root = insertSplay(tree->root,it);
+    }else {
+        printf("BALANCE STRATEGY NOT IMPLEMENTED\n");
+        exit(1);
+   }
+}
+The heights you obtain should be the same as these (except for randomised -they will be slightly different).
+
+ //Error checking added
+static link rotLeft (link currentTree) {
+    if(currentTree == emptyTree || currentTree->right == emptyTree){
+        return currentTree;
+    }
+    link rotLTree = currentTree->right;
+    currentTree->right = rotLTree->left;
+    rotLTree->left = currentTree;
+    rotLTree->left->size = rotLTree->left->left->size + rotLTree->left->right->size +1;
+    rotLTree->size = rotLTree->left->size + rotLTree->right->size + 1;
+   
+    return rotLTree;
+}
+
+//Error checking added
+static link rotRight (link currentTree) {
+    if(currentTree == emptyTree || currentTree->left == emptyTree){
+        return currentTree;
+    }
+    link rotRTree = currentTree->left;
+    currentTree->left = rotRTree->right;
+    rotRTree->right = currentTree;
+    
+    rotRTree->right->size = rotRTree->right->left->size + rotRTree->right->right->size + 1;
+    rotRTree->size = rotRTree->right->size+ rotRTree->left->size+1;
+
+    return rotRTree;
+}
+
+//Relies on error checking added to rotateLeft and rotateRight
+link searchSplay (link n, Key k, int * found){
+  
+    link returnVal = NULL;
+    
+    if (n == emptyTree) {
+        // item not found
+        *found = 0;
+        returnVal =  n;  
+    }else if (eq(key(n->item),k)) {
+        *found = 1;    // item found, store true
+        returnVal =  n;  
+    } //else if 
+    //COMPLETE THE IMPLEMENTATION HERE
+     else if (less (k, key (n->item))) {
+        if (n->left == emptyTree){
+            *found = 0;// item not found
+            //returnVal =  rotateRight(n);
+            returnVal = n;
+        }else if(eq(key(n->left->item),k)){
+            *found = 1;
+            returnVal =  rotRight(n);
+        }else{
+            if (less (k, key(n->left->item))) {
+                /* left-left */
+                n->left->left = searchSplay (n->left->left, k, found);
+              
+                n = rotRight (n);
+               
+            } else {
+                /* left-right */
+                n->left->right = searchSplay (n->left->right, k, found);
+                n->left = rotLeft (n->left);
+            }
+            returnVal =  rotRight (n);
+        }
+   } else {
+        
+       if (n->right == emptyTree){
+            *found = 0;// item not found
+            //returnVal =  rotateLeft(n);
+            returnVal = n;
+        }else if(eq(key(n->right->item),k)){
+            *found = 1;
+            returnVal =  rotLeft(n);
+        } else{
+            if (less (key(n->right->item), k)) {
+                /* right-right */
+                n->right->right = searchSplay (n->right->right, k, found);
+               
+                n = rotLeft (n);
+                
+            } else {
+                /* right-left */
+                n->right->left = searchSplay (n->right->left, k, found);
+                n->right = rotRight (n->right);
+            }
+            
+            returnVal =  rotLeft (n);
+        }
+   }
+   return returnVal;
+}
+
+ 
+ 
+Task1:
+TREE HEIGHTS
+              D0(13) D1(1777) D2(7106) D3(21316) D4(63946) D5(98325)
+NO_REBALANCE  12      1776     7105     21315     63945     98324
+BALANCE_1000  12       784      116       328       959       339
+BALANCE_100   12        85       16        28        59        39
+BALANCE_1      3        10       12        14        15        16
+RANDOMISED     5        27       30        36        40        41   
+SPLAY          12      1776     7105     21315     63945     98324
+
+
+
+Balancing after every insertion clearly leads to the most compact height - with the minimum logn height being obtained.
+The more often you call rebalance, the smaller the height of the tree. This is because after you have rebalanced the tree, more elements are inserted and the tree can become unbalanced again.
+Randomised BST seems to produce comparably compact trees.
+Splay insertion for ordered data produces O(n) trees.
+The height of the tree is only one consideration when we are determing which algorithm to use. Although BALANCE_1 makes the most compact tree, the time needed to insert all elements is very high. However once the tree is constructed, search times are log n. If the time needed to search the tree was important but the time to insert items was not, this would be ok.
+Randomised BST led to good insert and search times. - log n for both
+
+Even though splay insertion of ordered data results in O(n) height trees, it is very quick to insert all the data. This is because inserting ordered data into a splay tree is O(1). When using a normal search, overall searches are inefficient due to the O(n) tree. Splay trees can also be restructured during searching (see the next exercise) - so analysis is more complicated. They are particularly suitable when we need to access recently used items in the tree.
